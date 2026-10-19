@@ -10,7 +10,7 @@ import {
   readJson,
   setAdminCookie,
 } from "@/lib/request";
-import { getStore } from "@/lib/store";
+import { getStore, redisEnvNames } from "@/lib/store";
 import { isWeekKey, weekKey, weekLabel } from "@/lib/week";
 
 export async function GET(req: Request) {
@@ -33,6 +33,7 @@ export async function GET(req: Request) {
       currentWeek: current,
       weeks: [...new Set([current, ...weeks])],
       storage: store.kind,
+      redisEnv: store.kind === "memory" ? redisEnvNames() : [],
       prompt,
       stats: { ...stats, subscribers: subscribers.length },
       ideas: ideas

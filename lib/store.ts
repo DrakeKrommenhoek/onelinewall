@@ -99,7 +99,11 @@ function toVote(v: unknown): Vote {
 
 class RedisStore implements Store {
   kind = "redis" as const;
-  constructor(private r: Redis) {}
+  private r: Redis;
+
+  constructor(r: Redis) {
+    this.r = r;
+  }
 
   async getPrompt() {
     const raw = await this.r.get<string>(k.prompt);
@@ -398,11 +402,39 @@ class MemoryStore implements Store {
 
 let cached: Store | null = null;
 
+// Vercel's Upstash integration may add a custom prefix (e.g. STORAGE_KV_REST_API_URL),
+// so match any URL/TOKEN pair that shares a prefix.
+const PAIRS = [
+  ["KV_REST_API_URL", "KV_REST_API_TOKEN"],
+  ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"],
+] as const;
+
+export function findRedisEnv(env: Record<string, string | undefined> = process.env) {
+  for (const [urlSuffix, tokenSuffix] of PAIRS) {
+    const urlKeys = Object.keys(env)
+      .filter((key) => key.endsWith(urlSuffix) && env[key])
+      .sort((a, b) => a.length - b.length);
+    for (const urlKey of urlKeys) {
+      const tokenKey = urlKey.slice(0, -urlSuffix.length) + tokenSuffix;
+      if (env[tokenKey]) return { url: env[urlKey]!, token: env[tokenKey]!, urlKey, tokenKey };
+    }
+  }
+  return null;
+}
+
+/** Names (never values) of env vars that look Redis-related, for the admin page. */
+export function redisEnvNames(env: Record<string, string | undefined> = process.env): string[] {
+  return Object.keys(env)
+    .filter((key) => /KV_|REDIS|UPSTASH/i.test(key) && env[key])
+    .sort();
+}
+
 export function getStore(): Store {
   if (cached) return cached;
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-  cached = url && token ? new RedisStore(new Redis({ url, token, automaticDeserialization: false })) : new MemoryStore();
+  const found = findRedisEnv();
+  cached = found
+    ? new RedisStore(new Redis({ url: found.url, token: found.token, automaticDeserialization: false }))
+    : new MemoryStore();
   return cached;
 }
 

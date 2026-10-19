@@ -11,6 +11,7 @@ type Data = {
   currentWeek: string;
   weeks: string[];
   storage: "redis" | "memory";
+  redisEnv: string[];
   prompt: Prompt;
   stats: Record<string, number>;
   ideas: AdminIdea[];
@@ -88,10 +89,17 @@ export default function AdminDashboard() {
       </div>
 
       {data.storage === "memory" && (
-        <p className="msg error" style={{ marginBottom: 20 }}>
-          Storage is in memory, so everything resets on redeploy. Connect Upstash Redis in Vercel → Storage, then
-          redeploy.
-        </p>
+        <div className="msg error" style={{ marginBottom: 20 }}>
+          <p style={{ margin: 0 }}>
+            Storage is in memory, so everything resets on redeploy. Connect Upstash Redis in Vercel → Storage (all
+            environments), then redeploy.
+          </p>
+          <p style={{ margin: "8px 0 0", fontWeight: 500 }}>
+            {data.redisEnv.length
+              ? `Redis-related variables this deployment can see: ${data.redisEnv.join(", ")}. It needs a matching *_REST_API_URL + *_REST_API_TOKEN pair.`
+              : "This deployment can't see any Redis variables yet. If you already connected Upstash, redeploy so it picks them up."}
+          </p>
+        </div>
       )}
       {error && (
         <p className="msg error" role="alert" style={{ marginBottom: 20 }}>
