@@ -5,7 +5,16 @@ import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { MARKERS, site } from "@/content/site";
 import HeroLines from "./HeroLines";
 
-const VIDEO = process.env.NEXT_PUBLIC_HERO_VIDEO || "/media/commons-timelapse.mp4";
+// Set NEXT_PUBLIC_HERO_VIDEO to host the video elsewhere. Otherwise: H.264 for Safari/Chrome,
+// VP9 for browsers without H.264.
+const CUSTOM_VIDEO = process.env.NEXT_PUBLIC_HERO_VIDEO;
+const SOURCES: { src: string; type?: string }[] = CUSTOM_VIDEO
+  ? [{ src: CUSTOM_VIDEO }]
+  : [
+      { src: "/media/commons-timelapse.mp4", type: "video/mp4" },
+      { src: "/media/commons-timelapse.webm", type: "video/webm" },
+    ];
+const POSTER = CUSTOM_VIDEO ? undefined : "/media/commons-timelapse-poster.jpg";
 
 export default function Hero() {
   const video = useRef<HTMLVideoElement>(null);
@@ -37,12 +46,12 @@ export default function Hero() {
 
   return (
     <section className="hero" aria-labelledby="hero-title">
-      <div className="board-frame hero-board">
+      <div className={`board-frame hero-board${ready ? " has-video" : ""}`}>
         <HeroLines />
         <video
           ref={video}
           className={`hero-video${ready ? " ready" : ""}`}
-          src={VIDEO}
+          poster={POSTER}
           autoPlay
           muted
           loop
@@ -50,7 +59,12 @@ export default function Hero() {
           preload="auto"
           aria-label={`Time-lapse of students adding one line at a time at our booth in ${site.booth.place}`}
           onLoadedData={() => setReady(true)}
-        />
+          onCanPlay={() => setReady(true)}
+        >
+          {SOURCES.map((s) => (
+            <source key={s.src} src={s.src} type={s.type} />
+          ))}
+        </video>
         <div className="hero-scrim" />
 
         <span className="hero-chip">

@@ -19,9 +19,9 @@ The QR code points to `/?from=qr#pitch`. People who scan it land on the pitch bo
 
 Most copy lives in **`content/site.ts`**: team members, formats, prompt starters, the "questions" sticky notes, interview findings, and the booth date. Each team member can optionally get a `role`, `major`, `year`, `line` (a one-sentence quote), and `photo` (put the image in `public/team/` and set `photo: "/team/name.jpg"`).
 
-## Adding the time-lapse video
+## The time-lapse video
 
-Put the file at **`public/media/commons-timelapse.mp4`** and push. See `public/media/README.md` for compression tips. Until the file exists, the hero shows animated marker lines instead.
+The hero plays the Commons booth time-lapse from `public/media/` (MP4 + WebM + poster frame). See `public/media/README.md` to swap in a new one.
 
 ## Pitches, votes, and moderation
 

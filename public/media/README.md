@@ -1,16 +1,17 @@
 # Hero video
 
-Drop the time-lapse from the Commons booth here as **`commons-timelapse.mp4`**.
-The home page picks it up automatically. Until it exists, the hero shows animated marker lines instead.
+The home page plays the Commons booth time-lapse from this folder:
 
-Tips so it loads fast on phones:
+- `commons-timelapse.mp4`: H.264, for Safari and Chrome
+- `commons-timelapse.webm`: VP9, for browsers without H.264
+- `commons-timelapse-poster.jpg`: the finished wall, shown before the video loads
 
-- Keep it under ~15 MB (GitHub rejects files over 100 MB).
-- 1080p or 720p, H.264 MP4, no audio track needed (it plays muted).
-- Optional compression with ffmpeg:
+To swap in a new video, replace all three (same names). From an iPhone `.mov`:
 
-  ```
-  ffmpeg -i input.mov -vf "scale=-2:1080" -c:v libx264 -crf 28 -preset slow -an -movflags +faststart commons-timelapse.mp4
-  ```
+```
+ffmpeg -i IMG_1234.mov -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 22 -preset slow -an -movflags +faststart commons-timelapse.mp4
+ffmpeg -i commons-timelapse.mp4 -c:v libvpx-vp9 -b:v 0 -crf 36 -row-mt 1 -an commons-timelapse.webm
+ffmpeg -sseof -1.5 -i commons-timelapse.mp4 -frames:v 1 -q:v 3 commons-timelapse-poster.jpg
+```
 
-Want to host the video somewhere else instead (e.g. Vercel Blob)? Set `NEXT_PUBLIC_HERO_VIDEO` to its URL in Vercel.
+Keep each file under ~15 MB so it loads fast on phones. To host the video elsewhere instead, set `NEXT_PUBLIC_HERO_VIDEO` to its URL in Vercel.
