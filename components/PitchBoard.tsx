@@ -57,6 +57,7 @@ export default function PitchBoard() {
   const [hiddenForMe, setHiddenForMe] = useState<Set<string>>(new Set());
   const [fromQr, setFromQr] = useState(false);
   const inFlight = useRef(new Set<string>());
+  const root = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async (week: "current" | "previous") => {
     try {
@@ -83,12 +84,27 @@ export default function PitchBoard() {
     void load(which);
   }, [which, load]);
 
-  // Live-ish: refresh every 20s while the tab is visible.
+  // Live-ish, but cheap on the database: refresh every 45s only while the board is on screen,
+  // the tab is visible, and the visitor has done something in the last 10 minutes.
   useEffect(() => {
+    const el = root.current;
+    let onScreen = false;
+    let lastActive = Date.now();
+    const active = () => (lastActive = Date.now());
+    const io = new IntersectionObserver(([e]) => (onScreen = e.isIntersecting));
+    if (el) io.observe(el);
+    const events = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
+    events.forEach((ev) => window.addEventListener(ev, active, { passive: true }));
     const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") void load(which);
-    }, 20000);
-    return () => window.clearInterval(id);
+      if (onScreen && document.visibilityState === "visible" && Date.now() - lastActive < 10 * 60_000) {
+        void load(which);
+      }
+    }, 45_000);
+    return () => {
+      window.clearInterval(id);
+      io.disconnect();
+      events.forEach((ev) => window.removeEventListener(ev, active));
+    };
   }, [which, load]);
 
   // People who scanned the QR on a physical board get a hello, and we count the scan.
@@ -199,7 +215,7 @@ export default function PitchBoard() {
   }
 
   return (
-    <div className="board-frame pitch-wrap">
+    <div className="board-frame pitch-wrap" ref={root}>
       <div className="pitch-grid">
         {/* ---------- Form ---------- */}
         <div>
