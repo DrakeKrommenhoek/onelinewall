@@ -402,11 +402,12 @@ class MemoryStore implements Store {
 
 let cached: Store | null = null;
 
-// Vercel's Upstash integration may add a custom prefix (e.g. STORAGE_KV_REST_API_URL),
-// so match any URL/TOKEN pair that shares a prefix.
+// Vercel asks for a custom prefix when connecting a database that's already used by another
+// project, giving names like OLW_REST_API_URL or OLW_KV_REST_API_URL. Match any URL/TOKEN pair
+// that shares a prefix.
 const PAIRS = [
-  ["KV_REST_API_URL", "KV_REST_API_TOKEN"],
-  ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"],
+  ["REST_API_URL", "REST_API_TOKEN"],
+  ["REDIS_REST_URL", "REDIS_REST_TOKEN"],
 ] as const;
 
 export function findRedisEnv(env: Record<string, string | undefined> = process.env) {

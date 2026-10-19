@@ -17,6 +17,12 @@ test("finds prefixed names from the Upstash integration", () => {
   assert.equal(found?.token, "t2");
 });
 
+test("finds names where the custom prefix replaces KV", () => {
+  const found = findRedisEnv({ OLW_REST_API_URL: "https://d", OLW_REST_API_TOKEN: "t4", OLW_URL: "rediss://x" });
+  assert.equal(found?.url, "https://d");
+  assert.equal(found?.token, "t4");
+});
+
 test("finds Upstash-native names", () => {
   const found = findRedisEnv({ UPSTASH_REDIS_REST_URL: "https://c", UPSTASH_REDIS_REST_TOKEN: "t3" });
   assert.equal(found?.url, "https://c");
